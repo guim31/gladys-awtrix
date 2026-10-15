@@ -1,0 +1,22 @@
+{
+  "bat": 82,
+  "bat_raw": 612,
+  "type": 0,
+  "lux": 34,
+  "ldr_raw": 412,
+  "ram": 132456,
+  "bri": 98,
+  "temp": 24,
+  "hum": 41,
+  "uptime": 86512,
+  "wifi_signal": -61,
+  "messages": 3,
+  "version": "0.98",
+  "indicator1": false,
+  "indicator2": false,
+  "indicator3": false,
+  "app": "Time",
+  "uid": "awtrix_3c1a2b",
+  "matrix": true,
+  "ip_address": "192.0.2.10"
+}

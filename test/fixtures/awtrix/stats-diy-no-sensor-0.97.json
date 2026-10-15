@@ -1,0 +1,18 @@
+{
+  "type": 1,
+  "lux": 0,
+  "ldr_raw": 0,
+  "ram": 168220,
+  "bri": 120,
+  "uptime": 3605,
+  "wifi_signal": -74,
+  "messages": 0,
+  "version": "0.97",
+  "indicator1": true,
+  "indicator2": false,
+  "indicator3": false,
+  "app": "Date",
+  "uid": "awtrix_7f00d1",
+  "matrix": true,
+  "ip_address": "192.0.2.11"
+}

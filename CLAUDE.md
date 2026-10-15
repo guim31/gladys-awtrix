@@ -31,16 +31,24 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: registerHandlers, shutdown, connect()
+src/app.js                        registers every SDK handler (also used by the tests)
+src/hub.js                        the clocks: timer, mDNS discovery, states, status, commands
+src/devices.js                    one device per clock: features, names (4 languages), states
+src/awtrix/client.js              AWTRIX 3 HTTP API client, error kinds, one request at a time
+src/awtrix/http.js                the only network code (node:http)
+src/awtrix/model.js               parsing of /api/stats and /api/settings, payload builders
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    dashboard widget `awtrix` (manifest `widgets`)
+src/texts.js                      messages of the code, 4 languages
+src/issues.js                     repeated failures logged once
+src/store.js                      /data/awtrix-state.json (clocks met, no secret)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+scripts/probe.mjs                 read-only probe of a real clock (node scripts/probe.mjs <ip>)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys, same sections
+test/                             node --test, SDK fake Gladys + simulated clocks (test/helpers)
+test/fixtures/awtrix/             AWTRIX 3 answers built from the 0.98 firmware source
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +78,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in four languages (English, French, German with
+  "du", Spanish with "usted"): action messages, manifest texts, feature names,
+  widget content, and `docs/en.md`, `docs/fr.md`, `docs/de.md`, `docs/es.md`
+  with the same sections. `test/i18n.test.js` enforces it.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +243,39 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## AWTRIX 3 (propre à cette intégration)
+
+**API utilisée** (HTTP local, pas de MQTT) : `GET /api/stats`, `GET /api/settings`, et pour les commandes
+`POST /api/power`, `/api/settings`, `/api/notify`, `/api/notify/dismiss`, `/api/custom?name=`,
+`/api/indicator1..3`, `/api/nextapp`, `/api/switch`. Vérifié dans le source du firmware 0.98
+(`ServerManager.cpp`, `DisplayManager.cpp`), pas sur une vraie horloge : développé sans le matériel.
+
+**Pièges découverts**
+
+- **AWTRIX 3 est archivé depuis le 20/09/2026** au profit d'**AWTRIX NG**, réécriture complète à l'API
+  différente (`/api/v1/...`, clés en camelCase, durées en ms, validation stricte en 422). Aucune
+  compatibilité ascendante. Le client détecte NG (`/api/stats` en 404 et `/api/v1/version` en 200) et le
+  signale ; une prise en charge de NG serait une autre intégration ou une évolution majeure.
+- **Identité** : `uid` de `/api/stats` = `awtrix_` + 3 derniers octets du MAC, stable. C'est le
+  `platformId` ; le mDNS l'annonce aussi (`_awtrix._tcp`, TXT `id`, `type=awtrix3`). Une adresse tapée et
+  une adresse mDNS de la même horloge font un seul appareil (l'adresse tapée gagne tant qu'elle répond).
+- **`temp`/`hum` absents** de `/api/stats` quand la lecture du capteur est coupée ; **`bat` absent** sur le
+  build DIY (`type` 1). Les fonctionnalités vues une fois restent (mémorisées dans `/data`) : sinon la
+  structure rétrécit et Gladys propose « Mettre à jour » pour rien.
+- **`temp` est toujours en °C** dans `/api/stats` (le réglage °F ne change que l'affichage).
+- **Luminosité** : `bri` (0-255) varie seule quand `ABRI` est actif ; régler `BRI` sans `ABRI: false` est
+  aussitôt écrasé. La commande envoie les deux, comme les intégrations Home Assistant.
+- **Boutons physiques** : remontés seulement en MQTT, ou par un POST vers une URL de rappel
+  (`BUTTON_CALLBACK`) que le conteneur en pont ne peut pas offrir. Aucun déclencheur n'est promis.
+- **Notification** : `repeat` est ignoré quand le texte ne défile pas (la durée s'applique) ; `repeat: 1`
+  fait donc défiler un texte long une fois en entier sans couper un texte court. `hold` attend le bouton du
+  milieu ou `/api/notify/dismiss`.
+- **Application personnalisée** : un corps vide la supprime (et toutes les `nom0`, `nom1`… d'une app
+  multi-pages) ; `lifetime` (s) la retire si elle n'est plus mise à jour. Le texte peut contenir `{{…}}`,
+  que le firmware traite comme un placeholder MQTT : sans broker, sans effet.
+- **Authentification** : HTTP Basic sur toutes les routes `/api` dès que « Auth Username » est non vide
+  (mot de passe par défaut `awtrix`, ignoré tant que le nom est vide). 401 sinon.
+- **ESP32 mono-requête** : le client sérialise les requêtes par horloge (`AwtrixClient.send`).
+- **Libellés des formulaires de widget** (`action.fields`) : objets multilingues obligatoires, pas des
+  chaînes ; `validateWidgetContent` le détecte, le cœur jetterait le bouton.

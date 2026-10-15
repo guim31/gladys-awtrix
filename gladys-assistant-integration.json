@@ -1,147 +1,618 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "AWTRIX 3",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "AWTRIX 3 pixel clocks (Ulanzi TC001): notifications, Gladys values on screen, sensors.",
+    "fr": "Horloges AWTRIX 3 (Ulanzi TC001) : notifications, valeurs Gladys à l'écran, capteurs.",
+    "de": "AWTRIX-3-Pixeluhren (Ulanzi TC001): Benachrichtigungen, Gladys-Werte, Sensoren.",
+    "es": "Relojes AWTRIX 3 (Ulanzi TC001): notificaciones, valores de Gladys en pantalla, sensores."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-awtrix:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-awtrix/main/cover.png",
+  "categories": ["notifications"],
+  "transports": ["local"],
+  "network_discovery": [
+    {
+      "type": "mdns",
+      "service": "_awtrix._tcp"
+    }
+  ],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your AWTRIX 3 clocks",
+        "fr": "Vos horloges AWTRIX 3",
+        "de": "Deine AWTRIX-3-Uhren",
+        "es": "Sus relojes AWTRIX 3"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Clocks running the AWTRIX 3 firmware (Ulanzi TC001 or a DIY build), on the local network. Gladys finds them on its own (mDNS); otherwise enter their addresses. AWTRIX NG is not supported.",
+        "fr": "Horloges sous le firmware AWTRIX 3 (Ulanzi TC001 ou montage maison), sur le réseau local. Gladys les trouve seule (mDNS) ; sinon, saisissez leurs adresses. AWTRIX NG n'est pas pris en charge.",
+        "de": "Uhren mit der Firmware AWTRIX 3 (Ulanzi TC001 oder Eigenbau) im lokalen Netzwerk. Gladys findet sie selbst (mDNS); sonst gib ihre Adressen ein. AWTRIX NG wird nicht unterstützt.",
+        "es": "Relojes con el firmware AWTRIX 3 (Ulanzi TC001 o montaje propio) en la red local. Gladys los encuentra sola (mDNS); si no, introduzca sus direcciones. AWTRIX NG no es compatible."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://blueforcer.github.io/awtrix3/",
+          "label": {
+            "en": "AWTRIX 3 documentation",
+            "fr": "Documentation AWTRIX 3",
+            "de": "AWTRIX-3-Dokumentation",
+            "es": "Documentación de AWTRIX 3"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "hosts",
+      "type": "string",
+      "label": {
+        "en": "Clock addresses",
+        "fr": "Adresses des horloges",
+        "de": "Adressen der Uhren",
+        "es": "Direcciones de los relojes"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
       "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+        "en": "IP addresses or host names, separated by commas. Optional when Gladys finds your clocks.",
+        "fr": "Adresses IP ou noms d'hôte, séparés par des virgules. Facultatif si Gladys trouve vos horloges.",
+        "de": "IP-Adressen oder Hostnamen, durch Kommas getrennt. Optional, wenn Gladys deine Uhren findet.",
+        "es": "Direcciones IP o nombres de host, separados por comas. Opcional si Gladys encuentra sus relojes."
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "placeholder": {
+        "en": "e.g. 192.168.1.50, 192.168.1.51",
+        "fr": "ex. 192.168.1.50, 192.168.1.51",
+        "de": "z. B. 192.168.1.50, 192.168.1.51",
+        "es": "p. ej. 192.168.1.50, 192.168.1.51"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "discovery",
+      "type": "boolean",
+      "label": {
+        "en": "Find the clocks on the network",
+        "fr": "Trouver les horloges sur le réseau",
+        "de": "Uhren im Netzwerk finden",
+        "es": "Buscar los relojes en la red"
+      },
+      "description": {
+        "en": "Gladys looks for the clocks announcing themselves in mDNS, and follows a clock whose address changes.",
+        "fr": "Gladys cherche les horloges qui s'annoncent en mDNS, et suit une horloge dont l'adresse change.",
+        "de": "Gladys sucht die Uhren, die sich per mDNS melden, und folgt einer Uhr, deren Adresse sich ändert.",
+        "es": "Gladys busca los relojes que se anuncian por mDNS y sigue a un reloj cuya dirección cambia."
+      },
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "auth",
+      "type": "section",
+      "label": {
+        "en": "Password protection",
+        "fr": "Protection par mot de passe",
+        "de": "Passwortschutz",
+        "es": "Protección con contraseña"
+      },
+      "description": {
+        "en": "Only if you set an \"Auth Username\" and \"Auth Password\" in the web interface of the clocks (the same for all of them). Leave empty otherwise.",
+        "fr": "Seulement si vous avez défini « Auth Username » et « Auth Password » dans l'interface web des horloges (les mêmes pour toutes). Sinon, laissez vide.",
+        "de": "Nur wenn du in der Weboberfläche der Uhren „Auth Username“ und „Auth Password“ gesetzt hast (für alle gleich). Sonst leer lassen.",
+        "es": "Solo si ha definido «Auth Username» y «Auth Password» en la interfaz web de los relojes (los mismos para todos). Si no, déjelo vacío."
+      }
+    },
+    {
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username",
+        "fr": "Nom d'utilisateur",
+        "de": "Benutzername",
+        "es": "Nombre de usuario"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      },
+      "description": {
+        "en": "The clocks are read over the local network only, one request at a time.",
+        "fr": "Les horloges sont lues sur le réseau local seulement, une requête à la fois.",
+        "de": "Die Uhren werden nur im lokalen Netzwerk gelesen, eine Anfrage nach der anderen.",
+        "es": "Los relojes se leen solo en la red local, una petición cada vez."
+      }
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often the clocks are read (sensors, display, current app).",
+        "fr": "Fréquence de lecture des horloges (capteurs, écran, application en cours).",
+        "de": "Wie oft die Uhren gelesen werden (Sensoren, Anzeige, aktuelle App).",
+        "es": "Con qué frecuencia se leen los relojes (sensores, pantalla, aplicación actual)."
+      },
+      "required": false,
+      "default": "30",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "15",
+          "label": {
+            "en": "15 seconds",
+            "fr": "15 secondes",
+            "de": "15 Sekunden",
+            "es": "15 segundos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de funciones"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Names given to the features when a device is added, and messages of the integration.",
+        "fr": "Noms donnés aux fonctionnalités à l'ajout d'un appareil, et messages de l'intégration.",
+        "de": "Namen der Funktionen beim Hinzufügen eines Geräts und Meldungen der Integration.",
+        "es": "Nombres de las funciones al añadir un dispositivo y mensajes de la integración."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
-    }
-  ],
-  "scene_triggers": [
-    {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
-          "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
+      "description": {
+        "en": "Looks for the clocks, reads each one now and reports what it finds.",
+        "fr": "Cherche les horloges, lit chacune maintenant et indique ce qu'il trouve.",
+        "de": "Sucht die Uhren, liest jede sofort und meldet, was es findet.",
+        "es": "Busca los relojes, lee cada uno ahora e indica lo que encuentra."
+      },
+      "timeout_seconds": 45
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "show_notification",
+      "label": {
+        "en": "Show a notification on AWTRIX",
+        "fr": "Afficher une notification sur AWTRIX",
+        "de": "Benachrichtigung auf AWTRIX anzeigen",
+        "es": "Mostrar una notificación en AWTRIX"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "A text shown once over the apps, with a color, an icon and a sound if you want.",
+        "fr": "Un texte affiché une fois par-dessus les applications, avec couleur, icône et son au choix.",
+        "de": "Ein Text, einmal über den Apps angezeigt, auf Wunsch mit Farbe, Symbol und Ton.",
+        "es": "Un texto mostrado una vez sobre las aplicaciones, con color, icono y sonido si lo desea."
+      },
+      "timeout_seconds": 20,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        },
+        {
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Text",
+            "fr": "Texte",
+            "de": "Text",
+            "es": "Texto"
+          },
+          "description": {
+            "en": "Type {{ to insert a value of the scene.",
+            "fr": "Tapez {{ pour insérer une valeur de la scène.",
+            "de": "Tippe {{, um einen Wert der Szene einzufügen.",
+            "es": "Escriba {{ para insertar un valor de la escena."
+          },
+          "required": true
+        },
+        {
+          "key": "color",
+          "type": "select",
+          "label": {
+            "en": "Text color",
+            "fr": "Couleur du texte",
+            "de": "Textfarbe",
+            "es": "Color del texto"
+          },
+          "required": false,
+          "default": "default",
+          "options": [
+            {
+              "value": "default",
+              "label": {
+                "en": "Clock default",
+                "fr": "Celle de l'horloge",
+                "de": "Standard der Uhr",
+                "es": "La del reloj"
+              }
+            },
+            {
+              "value": "white",
+              "label": {
+                "en": "White",
+                "fr": "Blanc",
+                "de": "Weiß",
+                "es": "Blanco"
+              }
+            },
+            {
+              "value": "red",
+              "label": {
+                "en": "Red",
+                "fr": "Rouge",
+                "de": "Rot",
+                "es": "Rojo"
+              }
+            },
+            {
+              "value": "orange",
+              "label": {
+                "en": "Orange",
+                "fr": "Orange",
+                "de": "Orange",
+                "es": "Naranja"
+              }
+            },
+            {
+              "value": "yellow",
+              "label": {
+                "en": "Yellow",
+                "fr": "Jaune",
+                "de": "Gelb",
+                "es": "Amarillo"
+              }
+            },
+            {
+              "value": "green",
+              "label": {
+                "en": "Green",
+                "fr": "Vert",
+                "de": "Grün",
+                "es": "Verde"
+              }
+            },
+            {
+              "value": "cyan",
+              "label": {
+                "en": "Cyan",
+                "fr": "Cyan",
+                "de": "Cyan",
+                "es": "Cian"
+              }
+            },
+            {
+              "value": "blue",
+              "label": {
+                "en": "Blue",
+                "fr": "Bleu",
+                "de": "Blau",
+                "es": "Azul"
+              }
+            },
+            {
+              "value": "purple",
+              "label": {
+                "en": "Purple",
+                "fr": "Violet",
+                "de": "Lila",
+                "es": "Morado"
+              }
+            },
+            {
+              "value": "pink",
+              "label": {
+                "en": "Pink",
+                "fr": "Rose",
+                "de": "Pink",
+                "es": "Rosa"
+              }
+            },
+            {
+              "value": "rainbow",
+              "label": {
+                "en": "Rainbow",
+                "fr": "Arc-en-ciel",
+                "de": "Regenbogen",
+                "es": "Arcoíris"
+              }
+            }
+          ]
+        },
+        {
+          "key": "icon",
+          "type": "string",
+          "label": {
+            "en": "Icon",
+            "fr": "Icône",
+            "de": "Symbol",
+            "es": "Icono"
+          },
+          "description": {
+            "en": "LaMetric icon id downloaded on the clock (web interface, Icons tab), e.g. 2422.",
+            "fr": "Identifiant d'icône LaMetric téléchargée sur l'horloge (interface web, onglet Icons), ex. 2422.",
+            "de": "ID eines LaMetric-Symbols, das auf die Uhr geladen ist (Weboberfläche, Reiter Icons), z. B. 2422.",
+            "es": "Identificador de un icono LaMetric descargado en el reloj (interfaz web, pestaña Icons), p. ej. 2422."
+          },
+          "placeholder": {
+            "en": "e.g. 2422",
+            "fr": "ex. 2422",
+            "de": "z. B. 2422",
+            "es": "p. ej. 2422"
+          },
+          "required": false
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration (seconds)",
+            "fr": "Durée (secondes)",
+            "de": "Dauer (Sekunden)",
+            "es": "Duración (segundos)"
+          },
+          "description": {
+            "en": "How long a short text stays on screen.",
+            "fr": "Temps d'affichage d'un texte court.",
+            "de": "Wie lange ein kurzer Text angezeigt wird.",
+            "es": "Tiempo que un texto corto permanece en pantalla."
+          },
+          "required": false,
+          "default": 10,
+          "min": 1,
+          "max": 3600
+        },
+        {
+          "key": "scroll",
+          "type": "select",
+          "label": {
+            "en": "Long text",
+            "fr": "Texte long",
+            "de": "Langer Text",
+            "es": "Texto largo"
+          },
+          "required": false,
+          "default": "whole_text",
+          "options": [
+            {
+              "value": "whole_text",
+              "label": {
+                "en": "Scrolls through once",
+                "fr": "Défile une fois en entier",
+                "de": "Läuft einmal ganz durch",
+                "es": "Se desplaza una vez entero"
+              }
+            },
+            {
+              "value": "duration",
+              "label": {
+                "en": "Scrolls for the duration",
+                "fr": "Défile pendant la durée",
+                "de": "Läuft für die Dauer",
+                "es": "Se desplaza durante la duración"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Does not scroll",
+                "fr": "Ne défile pas",
+                "de": "Läuft nicht",
+                "es": "No se desplaza"
+              }
+            }
+          ]
+        },
+        {
+          "key": "sound",
+          "type": "string",
+          "label": {
+            "en": "Sound",
+            "fr": "Son",
+            "de": "Ton",
+            "es": "Sonido"
+          },
+          "description": {
+            "en": "An RTTTL melody for the buzzer, or the name of a melody file of the clock. Empty: silent.",
+            "fr": "Une mélodie RTTTL pour le buzzer, ou le nom d'un fichier mélodie de l'horloge. Vide : silencieux.",
+            "de": "Eine RTTTL-Melodie für den Summer oder der Name einer Melodiedatei der Uhr. Leer: stumm.",
+            "es": "Una melodía RTTTL para el zumbador, o el nombre de un archivo de melodía del reloj. Vacío: sin sonido."
+          },
+          "placeholder": {
+            "en": "e.g. beep:d=16,o=6,b=120:c,e",
+            "fr": "ex. beep:d=16,o=6,b=120:c,e",
+            "de": "z. B. beep:d=16,o=6,b=120:c,e",
+            "es": "p. ej. beep:d=16,o=6,b=120:c,e"
+          },
+          "required": false
+        },
+        {
+          "key": "hold",
+          "type": "boolean",
+          "label": {
+            "en": "Stay until the button is pressed",
+            "fr": "Rester jusqu'à l'appui sur le bouton",
+            "de": "Bleiben, bis die Taste gedrückt wird",
+            "es": "Permanecer hasta pulsar el botón"
+          },
+          "description": {
+            "en": "The notification stays on screen until the middle button is pressed, or until \"Dismiss the AWTRIX notification\".",
+            "fr": "La notification reste à l'écran jusqu'à l'appui sur le bouton du milieu, ou jusqu'à « Effacer la notification AWTRIX ».",
+            "de": "Die Benachrichtigung bleibt, bis die mittlere Taste gedrückt wird oder bis „AWTRIX-Benachrichtigung ausblenden“.",
+            "es": "La notificación permanece en pantalla hasta pulsar el botón central, o hasta «Descartar la notificación de AWTRIX»."
+          },
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "wakeup",
+          "type": "boolean",
+          "label": {
+            "en": "Wake the display if it is off",
+            "fr": "Allumer l'écran s'il est éteint",
+            "de": "Anzeige einschalten, wenn sie aus ist",
+            "es": "Encender la pantalla si está apagada"
+          },
+          "description": {
+            "en": "The display lights up for the notification, then goes back off.",
+            "fr": "L'écran s'allume le temps de la notification, puis s'éteint de nouveau.",
+            "de": "Die Anzeige leuchtet für die Benachrichtigung auf und geht dann wieder aus.",
+            "es": "La pantalla se enciende durante la notificación y luego vuelve a apagarse."
+          },
+          "required": false,
+          "default": false
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "dismiss_notification",
+      "label": {
+        "en": "Dismiss the AWTRIX notification",
+        "fr": "Effacer la notification AWTRIX",
+        "de": "AWTRIX-Benachrichtigung ausblenden",
+        "es": "Descartar la notificación de AWTRIX"
+      },
+      "description": {
+        "en": "Removes a notification that waits for the button.",
+        "fr": "Retire une notification qui attend l'appui sur le bouton.",
+        "de": "Entfernt eine Benachrichtigung, die auf die Taste wartet.",
+        "es": "Quita una notificación que espera que se pulse el botón."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -149,29 +620,711 @@
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "set_custom_app",
+      "label": {
+        "en": "Show a value on AWTRIX",
+        "fr": "Afficher une valeur sur AWTRIX",
+        "de": "Wert auf AWTRIX anzeigen",
+        "es": "Mostrar un valor en AWTRIX"
+      },
+      "description": {
+        "en": "Creates or updates a custom app that stays in the rotation of the clock: outdoor temperature, power...",
+        "fr": "Crée ou met à jour une application personnalisée qui reste dans la rotation de l'horloge : température extérieure, consommation...",
+        "de": "Erstellt oder aktualisiert eine eigene App, die in der Rotation der Uhr bleibt: Außentemperatur, Verbrauch...",
+        "es": "Crea o actualiza una aplicación personalizada que se queda en la rotación del reloj: temperatura exterior, consumo..."
+      },
+      "timeout_seconds": 20,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "App name",
+            "fr": "Nom de l'application",
+            "de": "App-Name",
+            "es": "Nombre de la aplicación"
+          },
+          "description": {
+            "en": "Letters, digits, _ and -. The same name updates the same app.",
+            "fr": "Lettres, chiffres, _ et -. Le même nom met à jour la même application.",
+            "de": "Buchstaben, Ziffern, _ und -. Derselbe Name aktualisiert dieselbe App.",
+            "es": "Letras, cifras, _ y -. El mismo nombre actualiza la misma aplicación."
+          },
+          "placeholder": {
+            "en": "e.g. outdoor",
+            "fr": "ex. exterieur",
+            "de": "z. B. aussen",
+            "es": "p. ej. exterior"
+          },
+          "required": true
+        },
+        {
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Text",
+            "fr": "Texte",
+            "de": "Text",
+            "es": "Texto"
+          },
+          "description": {
+            "en": "Type {{ to insert a value of the scene, e.g. the last temperature.",
+            "fr": "Tapez {{ pour insérer une valeur de la scène, par exemple la dernière température.",
+            "de": "Tippe {{, um einen Wert der Szene einzufügen, zum Beispiel die letzte Temperatur.",
+            "es": "Escriba {{ para insertar un valor de la escena, por ejemplo la última temperatura."
+          },
+          "required": true
+        },
+        {
+          "key": "color",
+          "type": "select",
+          "label": {
+            "en": "Text color",
+            "fr": "Couleur du texte",
+            "de": "Textfarbe",
+            "es": "Color del texto"
+          },
+          "required": false,
+          "default": "default",
+          "options": [
+            {
+              "value": "default",
+              "label": {
+                "en": "Clock default",
+                "fr": "Celle de l'horloge",
+                "de": "Standard der Uhr",
+                "es": "La del reloj"
+              }
+            },
+            {
+              "value": "white",
+              "label": {
+                "en": "White",
+                "fr": "Blanc",
+                "de": "Weiß",
+                "es": "Blanco"
+              }
+            },
+            {
+              "value": "red",
+              "label": {
+                "en": "Red",
+                "fr": "Rouge",
+                "de": "Rot",
+                "es": "Rojo"
+              }
+            },
+            {
+              "value": "orange",
+              "label": {
+                "en": "Orange",
+                "fr": "Orange",
+                "de": "Orange",
+                "es": "Naranja"
+              }
+            },
+            {
+              "value": "yellow",
+              "label": {
+                "en": "Yellow",
+                "fr": "Jaune",
+                "de": "Gelb",
+                "es": "Amarillo"
+              }
+            },
+            {
+              "value": "green",
+              "label": {
+                "en": "Green",
+                "fr": "Vert",
+                "de": "Grün",
+                "es": "Verde"
+              }
+            },
+            {
+              "value": "cyan",
+              "label": {
+                "en": "Cyan",
+                "fr": "Cyan",
+                "de": "Cyan",
+                "es": "Cian"
+              }
+            },
+            {
+              "value": "blue",
+              "label": {
+                "en": "Blue",
+                "fr": "Bleu",
+                "de": "Blau",
+                "es": "Azul"
+              }
+            },
+            {
+              "value": "purple",
+              "label": {
+                "en": "Purple",
+                "fr": "Violet",
+                "de": "Lila",
+                "es": "Morado"
+              }
+            },
+            {
+              "value": "pink",
+              "label": {
+                "en": "Pink",
+                "fr": "Rose",
+                "de": "Pink",
+                "es": "Rosa"
+              }
+            },
+            {
+              "value": "rainbow",
+              "label": {
+                "en": "Rainbow",
+                "fr": "Arc-en-ciel",
+                "de": "Regenbogen",
+                "es": "Arcoíris"
+              }
+            }
+          ]
+        },
+        {
+          "key": "icon",
+          "type": "string",
+          "label": {
+            "en": "Icon",
+            "fr": "Icône",
+            "de": "Symbol",
+            "es": "Icono"
+          },
+          "description": {
+            "en": "LaMetric icon id downloaded on the clock (web interface, Icons tab), e.g. 2422.",
+            "fr": "Identifiant d'icône LaMetric téléchargée sur l'horloge (interface web, onglet Icons), ex. 2422.",
+            "de": "ID eines LaMetric-Symbols, das auf die Uhr geladen ist (Weboberfläche, Reiter Icons), z. B. 2422.",
+            "es": "Identificador de un icono LaMetric descargado en el reloj (interfaz web, pestaña Icons), p. ej. 2422."
+          },
+          "placeholder": {
+            "en": "e.g. 2422",
+            "fr": "ex. 2422",
+            "de": "z. B. 2422",
+            "es": "p. ej. 2422"
+          },
+          "required": false
+        },
+        {
+          "key": "progress",
+          "type": "number",
+          "label": {
+            "en": "Progress bar (0-100)",
+            "fr": "Barre de progression (0-100)",
+            "de": "Fortschrittsbalken (0-100)",
+            "es": "Barra de progreso (0-100)"
+          },
+          "description": {
+            "en": "Empty: no bar.",
+            "fr": "Vide : pas de barre.",
+            "de": "Leer: kein Balken.",
+            "es": "Vacío: sin barra."
+          },
+          "required": false,
+          "min": 0,
+          "max": 100
+        },
+        {
+          "key": "lifetime_minutes",
+          "type": "number",
+          "label": {
+            "en": "Remove after (minutes)",
+            "fr": "Retirer après (minutes)",
+            "de": "Entfernen nach (Minuten)",
+            "es": "Quitar después de (minutos)"
+          },
+          "description": {
+            "en": "The app disappears if it is not updated for that long. 0: never.",
+            "fr": "L'application disparaît si elle n'est pas mise à jour pendant ce temps. 0 : jamais.",
+            "de": "Die App verschwindet, wenn sie so lange nicht aktualisiert wird. 0: nie.",
+            "es": "La aplicación desaparece si no se actualiza durante ese tiempo. 0: nunca."
+          },
+          "required": false,
+          "default": 0,
+          "min": 0,
+          "max": 10080
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "remove_custom_app",
+      "label": {
+        "en": "Remove a value from AWTRIX",
+        "fr": "Retirer une valeur d'AWTRIX",
+        "de": "Wert von AWTRIX entfernen",
+        "es": "Quitar un valor de AWTRIX"
+      },
+      "description": {
+        "en": "Removes a custom app from the clock.",
+        "fr": "Retire une application personnalisée de l'horloge.",
+        "de": "Entfernt eine eigene App von der Uhr.",
+        "es": "Quita una aplicación personalizada del reloj."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "App name",
+            "fr": "Nom de l'application",
+            "de": "App-Name",
+            "es": "Nombre de la aplicación"
+          },
+          "description": {
+            "en": "The name given in \"Show a value on AWTRIX\".",
+            "fr": "Le nom donné dans « Afficher une valeur sur AWTRIX ».",
+            "de": "Der Name aus „Wert auf AWTRIX anzeigen“.",
+            "es": "El nombre dado en «Mostrar un valor en AWTRIX»."
+          },
+          "placeholder": {
+            "en": "e.g. outdoor",
+            "fr": "ex. exterieur",
+            "de": "z. B. aussen",
+            "es": "p. ej. exterior"
+          },
           "required": true
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "set_indicator",
+      "label": {
+        "en": "Set an AWTRIX indicator",
+        "fr": "Régler un indicateur AWTRIX",
+        "de": "AWTRIX-Indikator einstellen",
+        "es": "Ajustar un indicador de AWTRIX"
+      },
+      "description": {
+        "en": "Lights one of the three colored dots on the right of the screen, or turns it off.",
+        "fr": "Allume l'un des trois points de couleur à droite de l'écran, ou l'éteint.",
+        "de": "Schaltet einen der drei farbigen Punkte rechts am Bildschirm ein oder aus.",
+        "es": "Enciende uno de los tres puntos de color a la derecha de la pantalla, o lo apaga."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        },
+        {
+          "key": "indicator",
+          "type": "select",
+          "label": {
+            "en": "Indicator",
+            "fr": "Indicateur",
+            "de": "Indikator",
+            "es": "Indicador"
+          },
+          "required": true,
+          "default": "1",
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "1 (top right)",
+                "fr": "1 (en haut à droite)",
+                "de": "1 (oben rechts)",
+                "es": "1 (arriba a la derecha)"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2 (right)",
+                "fr": "2 (à droite)",
+                "de": "2 (rechts)",
+                "es": "2 (a la derecha)"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 (bottom right)",
+                "fr": "3 (en bas à droite)",
+                "de": "3 (unten rechts)",
+                "es": "3 (abajo a la derecha)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "color",
+          "type": "select",
+          "label": {
+            "en": "Color",
+            "fr": "Couleur",
+            "de": "Farbe",
+            "es": "Color"
+          },
+          "required": false,
+          "default": "red",
+          "options": [
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "fr": "Éteint",
+                "de": "Aus",
+                "es": "Apagado"
+              }
+            },
+            {
+              "value": "white",
+              "label": {
+                "en": "White",
+                "fr": "Blanc",
+                "de": "Weiß",
+                "es": "Blanco"
+              }
+            },
+            {
+              "value": "red",
+              "label": {
+                "en": "Red",
+                "fr": "Rouge",
+                "de": "Rot",
+                "es": "Rojo"
+              }
+            },
+            {
+              "value": "orange",
+              "label": {
+                "en": "Orange",
+                "fr": "Orange",
+                "de": "Orange",
+                "es": "Naranja"
+              }
+            },
+            {
+              "value": "yellow",
+              "label": {
+                "en": "Yellow",
+                "fr": "Jaune",
+                "de": "Gelb",
+                "es": "Amarillo"
+              }
+            },
+            {
+              "value": "green",
+              "label": {
+                "en": "Green",
+                "fr": "Vert",
+                "de": "Grün",
+                "es": "Verde"
+              }
+            },
+            {
+              "value": "cyan",
+              "label": {
+                "en": "Cyan",
+                "fr": "Cyan",
+                "de": "Cyan",
+                "es": "Cian"
+              }
+            },
+            {
+              "value": "blue",
+              "label": {
+                "en": "Blue",
+                "fr": "Bleu",
+                "de": "Blau",
+                "es": "Azul"
+              }
+            },
+            {
+              "value": "purple",
+              "label": {
+                "en": "Purple",
+                "fr": "Violet",
+                "de": "Lila",
+                "es": "Morado"
+              }
+            },
+            {
+              "value": "pink",
+              "label": {
+                "en": "Pink",
+                "fr": "Rose",
+                "de": "Pink",
+                "es": "Rosa"
+              }
+            }
+          ]
+        },
+        {
+          "key": "effect",
+          "type": "select",
+          "label": {
+            "en": "Effect",
+            "fr": "Effet",
+            "de": "Effekt",
+            "es": "Efecto"
+          },
+          "required": false,
+          "default": "steady",
+          "options": [
+            {
+              "value": "steady",
+              "label": {
+                "en": "Steady",
+                "fr": "Fixe",
+                "de": "Dauerhaft",
+                "es": "Fijo"
+              }
+            },
+            {
+              "value": "blink",
+              "label": {
+                "en": "Blinking",
+                "fr": "Clignotant",
+                "de": "Blinkend",
+                "es": "Intermitente"
+              }
+            },
+            {
+              "value": "fade",
+              "label": {
+                "en": "Fading",
+                "fr": "Pulsation",
+                "de": "Pulsierend",
+                "es": "Pulsante"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "next_app",
+      "label": {
+        "en": "Next AWTRIX app",
+        "fr": "Application AWTRIX suivante",
+        "de": "Nächste AWTRIX-App",
+        "es": "Aplicación AWTRIX siguiente"
+      },
+      "description": {
+        "en": "Shows the next app of the rotation.",
+        "fr": "Affiche l'application suivante de la rotation.",
+        "de": "Zeigt die nächste App der Rotation.",
+        "es": "Muestra la siguiente aplicación de la rotación."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
+        }
+      ]
+    },
+    {
+      "key": "switch_app",
+      "label": {
+        "en": "Show an AWTRIX app",
+        "fr": "Afficher une application AWTRIX",
+        "de": "AWTRIX-App anzeigen",
+        "es": "Mostrar una aplicación AWTRIX"
+      },
+      "description": {
+        "en": "Jumps to an app: Time, Date, Temperature, Humidity, Battery or a custom app.",
+        "fr": "Passe à une application : Time, Date, Temperature, Humidity, Battery ou une application personnalisée.",
+        "de": "Springt zu einer App: Time, Date, Temperature, Humidity, Battery oder einer eigenen App.",
+        "es": "Salta a una aplicación: Time, Date, Temperature, Humidity, Battery o una aplicación personalizada."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "App name",
+            "fr": "Nom de l'application",
+            "de": "App-Name",
+            "es": "Nombre de la aplicación"
+          },
+          "placeholder": {
+            "en": "e.g. Time",
+            "fr": "ex. Time",
+            "de": "z. B. Time",
+            "es": "p. ej. Time"
+          },
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "key": "clocks",
+          "type": "number",
+          "label": {
+            "en": "Clocks reached",
+            "fr": "Horloges atteintes",
+            "de": "Erreichte Uhren",
+            "es": "Relojes alcanzados"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "awtrix",
+      "label": {
+        "en": "AWTRIX clock",
+        "fr": "Horloge AWTRIX",
+        "de": "AWTRIX-Uhr",
+        "es": "Reloj AWTRIX"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "App on screen, sensors, and buttons: message, next app, display, dismiss.",
+        "fr": "Application affichée, capteurs, et boutons : message, app suivante, écran, effacer.",
+        "de": "Angezeigte App, Sensoren und Tasten: Nachricht, nächste App, Anzeige, ausblenden.",
+        "es": "Aplicación en pantalla, sensores y botones: mensaje, app siguiente, pantalla, descartar."
+      },
+      "icon": "monitor",
+      "action_timeout_seconds": 20,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Clock (empty: all)",
+            "fr": "Horloge (vide : toutes)",
+            "de": "Uhr (leer: alle)",
+            "es": "Reloj (vacío: todos)"
+          },
+          "description": {
+            "en": "Several clocks: one line each, and the buttons act on all of them.",
+            "fr": "Plusieurs horloges : une ligne chacune, et les boutons agissent sur toutes.",
+            "de": "Mehrere Uhren: eine Zeile pro Uhr, und die Tasten wirken auf alle.",
+            "es": "Varios relojes: una línea cada uno, y los botones actúan sobre todos."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }

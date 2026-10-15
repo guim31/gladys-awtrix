@@ -1,67 +1,205 @@
-# Template de démonstration
+# AWTRIX 3
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Cette intégration relie à Gladys les horloges à matrice LED **AWTRIX 3** : la
+« Smart Pixel Clock » Ulanzi TC001 et les montages ESP32 maison qui tournent
+sous le firmware libre AWTRIX 3. Gladys les lit et les pilote sur le réseau
+local, par leur API HTTP. Pas de cloud, pas de compte, pas de broker MQTT.
 
-## Ce que vous obtenez
+> **Développée sans le matériel : vos retours sont les bienvenus.**
+> L'intégration est construite et testée d'après l'API AWTRIX 3 telle que son
+> firmware et sa documentation la décrivent, pas sur une vraie horloge. Dites
+> ce qui marche et ce qui ne marche pas dans les
+> [issues](https://github.com/guim31/gladys-awtrix/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+AWTRIX et cette intégration ne sont pas affiliés à Ulanzi.
+
+## Présentation
+
+- **Un appareil par horloge** : écran allumé/éteint, luminosité, luminosité
+  automatique, un bouton « application suivante », l'application affichée, et
+  les capteurs de l'horloge (température, humidité, luminosité ambiante,
+  batterie, signal Wi-Fi, durée de fonctionnement).
+- **Actions de scène** : afficher une notification (texte, couleur, icône,
+  durée, son, attente du bouton), garder une valeur de Gladys à l'écran,
+  allumer les trois indicateurs de couleur, changer l'application affichée.
+- **Un widget de tableau de bord** avec l'application affichée, les capteurs
+  et quatre boutons : **Message…**, **App suivante**, **Éteindre** /
+  **Allumer**, **Effacer**.
+- Les horloges sont **trouvées seules** sur le réseau (mDNS), ou par leurs
+  adresses.
+
+## Prérequis
+
+- Gladys Assistant **5.2.0** ou plus récent.
+- Une horloge sous le firmware **AWTRIX 3**. L'intégration suit l'API de la
+  0.98, sa dernière version ; mettez à jour une horloge plus ancienne depuis
+  son interface web. Voir la
+  [documentation AWTRIX 3](https://blueforcer.github.io/awtrix3/) pour flasher
+  une Ulanzi TC001.
+- **AWTRIX NG**, le firmware qui lui succède (2026), a une autre API et
+  **n'est pas pris en charge** : l'intégration le reconnaît et le signale.
+- L'horloge et Gladys sur le même réseau local.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+1. Dans Gladys, ouvrez **Intégrations** → **Installer depuis GitHub** et
+   saisissez `https://github.com/guim31/gladys-awtrix` (ou installez
+   **AWTRIX 3** depuis le catalogue).
+2. Dans **Configuration** :
+   - **Trouver les horloges sur le réseau** (activé par défaut) : Gladys
+     cherche les horloges qui s'annoncent en mDNS, et suit une horloge dont
+     l'adresse change.
+   - **Adresses des horloges** : les adresses IP ou noms d'hôte de vos
+     horloges, séparés par des virgules (`192.168.1.50, 192.168.1.51`). Utile
+     quand le mDNS ne traverse pas votre réseau, ou pour garder une adresse
+     fixe.
+   - **Nom d'utilisateur** et **Mot de passe** : seulement si vous avez défini
+     « Auth Username » et « Auth Password » dans l'interface web des horloges.
+     Les mêmes pour toutes les horloges.
+   - **Intervalle de rafraîchissement** : fréquence de lecture des horloges
+     (30 secondes par défaut).
+   - **Langue des noms de fonctionnalités** : les noms donnés aux
+     fonctionnalités à l'ajout d'un appareil, et les messages de l'intégration.
+3. Cliquez sur **Tester la connexion** : chaque horloge trouvée est listée
+   avec son firmware et l'application affichée.
+4. Dans l'onglet **Découverte**, ajoutez les horloges à Gladys.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+Chaque lecture fait deux petites requêtes HTTP par horloge (`/api/stats` et
+`/api/settings`), envoyées l'une après l'autre : une horloge est un ESP32 et ne
+sert qu'une requête à la fois. Il n'y a pas de quota ; gardez un intervalle de
+15 secondes ou plus.
 
-## Actions
+## Appareils
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Chaque horloge est un appareil nommé « AWTRIX » suivi de la fin de son
+identifiant (par exemple `AWTRIX 3c1a2b`). Son identité est l'identifiant
+propre de l'horloge, pas son adresse : une nouvelle adresse IP garde
+l'appareil et son historique.
 
-## Scènes
+| Fonctionnalité          | Ce qu'elle fait                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| Écran                   | Allume ou éteint la matrice. L'horloge continue de tourner.                                      |
+| Luminosité              | 0 à 100 %. La régler coupe la luminosité automatique, sinon l'horloge la remplacerait aussitôt.  |
+| Luminosité automatique  | L'horloge suit la lumière ambiante.                                                              |
+| Application suivante    | Un bouton : affiche l'application suivante, comme le bouton droit de l'horloge.                  |
+| Application en cours    | L'application affichée : Time, Date, Temperature, une application personnalisée, Notification... |
+| Température             | En °C. Seulement si l'horloge la remonte (Ulanzi TC001, ou montage maison avec capteur).         |
+| Humidité                | En %. Même condition.                                                                            |
+| Luminosité ambiante     | En lux, d'après le capteur de lumière de l'horloge.                                              |
+| Batterie                | En %. Ulanzi TC001 seulement.                                                                    |
+| Signal Wi-Fi (dBm)      | Le signal reçu par l'horloge, en dBm (−50 : excellent, −80 : faible).                            |
+| Durée de fonctionnement | Heures depuis le dernier redémarrage de l'horloge.                                               |
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Ces noms sont ceux du français ; la langue choisie dans la configuration
+donne « Display », « Anzeige », « Pantalla »...
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+## Widget
 
-## Tableau de bord
+Ajoutez le widget **Horloge AWTRIX** à un tableau de bord. Il montre
+l'application affichée, l'écran, la luminosité et le signal Wi-Fi, avec la
+température et l'humidité quand l'horloge les a. Choisissez une horloge dans
+ses réglages, ou laissez vide pour toutes (une ligne chacune).
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Ses quatre boutons agissent sur l'horloge choisie, ou sur toutes :
+
+- **Message…** : ouvre un formulaire (texte, couleur, durée) et affiche le
+  texte sur l'horloge.
+- **App suivante** : l'application suivante de la rotation.
+- **Éteindre** / **Allumer** : éteint la matrice, ou la rallume.
+- **Effacer** : retire une notification qui attend l'appui sur le bouton.
+
+## Actions de scène
+
+Chaque action vise une horloge, ou toutes quand le champ horloge reste vide.
+Chacune renvoie le nombre d'horloges atteintes (« Horloges atteintes »), et
+échoue quand aucune ne l'a acceptée.
+
+- **Afficher une notification sur AWTRIX** : un texte affiché une fois
+  par-dessus les applications. Options : couleur du texte (ou arc-en-ciel),
+  une icône, la durée, ce que fait un texte long (défile une fois en entier,
+  défile pendant la durée, ne défile pas), un son, rester jusqu'à l'appui sur
+  le bouton du milieu, allumer l'écran s'il est éteint. Tapez `{{` dans le
+  texte pour insérer une valeur de la scène.
+- **Effacer la notification AWTRIX** : retire une notification qui attend
+  l'appui sur le bouton.
+- **Afficher une valeur sur AWTRIX** : crée ou met à jour une application
+  personnalisée qui reste dans la rotation de l'horloge. Le même nom met à
+  jour la même application. Options : couleur, icône, une barre de progression
+  (0-100), et « Retirer après (minutes) » : l'application disparaît si la
+  scène cesse de la mettre à jour, ainsi une vieille valeur ne reste jamais à
+  l'écran.
+- **Retirer une valeur d'AWTRIX** : retire cette application personnalisée.
+- **Régler un indicateur AWTRIX** : allume l'un des trois points de couleur à
+  droite de l'écran (1 en haut à droite, 2 à droite, 3 en bas à droite), fixe,
+  clignotant ou en pulsation, ou l'éteint.
+- **Application AWTRIX suivante** : l'application suivante de la rotation.
+- **Afficher une application AWTRIX** : passe à une application par son nom
+  (`Time`, `Date`, `Temperature`, `Humidity`, `Battery` ou une application
+  personnalisée).
+
+Les **icônes** sont des identifiants d'icônes LaMetric à télécharger d'abord
+sur l'horloge : interface web de l'horloge, onglet **Icons**, saisissez
+l'identifiant (par exemple `2422`), téléchargez. Les **sons** sont une
+mélodie RTTTL saisie dans le champ (`beep:d=16,o=6,b=120:c,e`), ou le nom d'un
+fichier mélodie de l'horloge (dossier MELODIES), joués par le buzzer de
+l'Ulanzi TC001.
+
+## Déclencheurs de scène
+
+Aucun. Les boutons de l'horloge signalent leurs appuis en MQTT, ou par un
+appel HTTP vers une adresse que l'intégration ne peut pas offrir depuis son
+conteneur. Gladys voit tout de même ce que les boutons changent :
+l'application affichée et l'écran sont des états d'appareil utilisables dans
+une scène.
+
+## Exemples de scènes
+
+- **Température extérieure toujours à l'écran** : déclencheur « la valeur
+  d'un appareil change » sur votre sonde extérieure → action **Afficher une
+  valeur sur AWTRIX**, nom `exterieur`, texte `{{valeur du déclencheur}} °C`
+  (à insérer avec `{{`), une icône de thermomètre, **Retirer après**
+  60 minutes.
+- **Lave-linge terminé** : déclencheur sur la puissance de la prise du
+  lave-linge qui passe sous 5 W → **Afficher une notification sur AWTRIX**
+  « Linge prêt », en vert, un son, **Rester jusqu'à l'appui sur le bouton**.
+- **Mode nuit** : à 23 h, passez l'**Écran** de l'horloge à éteint ; à 7 h,
+  rallumez-le. Ou gardez-le allumé avec la **Luminosité** à 5 %.
+- **Porte restée ouverte** : à l'ouverture de la porte d'entrée, **Régler un
+  indicateur AWTRIX** 1 en rouge, clignotant ; à la fermeture, indicateur 1
+  éteint.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Aucune horloge trouvée** : le mDNS ne traverse pas toujours les points
+  d'accès Wi-Fi ou les VLAN. Saisissez l'adresse de l'horloge dans **Adresses
+  des horloges**. Elle s'affiche sur l'horloge au démarrage, et dans votre box.
+- **« ne répond pas »** : l'horloge est éteinte, sur un autre réseau, ou son
+  adresse a changé. Avec la découverte active, Gladys la recherche toutes les
+  10 minutes.
+- **« nom d'utilisateur ou mot de passe refusé »** : l'horloge a un « Auth
+  Username » ; saisissez le même nom d'utilisateur et mot de passe dans la
+  configuration.
+- **« firmware AWTRIX NG »** : l'horloge tourne sous AWTRIX NG, non pris en
+  charge.
+- **La température est trop haute** : le capteur de l'Ulanzi TC001 est
+  chauffé par l'horloge elle-même. AWTRIX 3 propose un décalage de
+  température dans son fichier `dev.json` (`temp_offset`).
+- **Une icône ne s'affiche pas** : téléchargez-la d'abord sur l'horloge
+  (interface web, onglet Icons).
+- **Plus de détails** : passez `LOG_LEVEL=debug` sur l'intégration ; les
+  journaux ne contiennent jamais le mot de passe.
+
+## Limites
+
+- **Développée sans le matériel** : testée seulement d'après l'API documentée
+  et une horloge simulée.
+- AWTRIX 3 seulement ; AWTRIX NG n'est pas pris en charge.
+- Pas de déclencheur pour les boutons de l'horloge (MQTT seulement).
+- Un seul nom d'utilisateur et mot de passe pour toutes les horloges.
+- HTTP simple seulement, comme AWTRIX 3 le sert : gardez les horloges sur un
+  réseau de confiance.
+- La luminosité d'une horloge en luminosité automatique bouge avec la
+  lumière : Gladys montre la valeur lue à chaque rafraîchissement.
+
+Signalez un problème ou une idée dans les
+[issues](https://github.com/guim31/gladys-awtrix/issues).
