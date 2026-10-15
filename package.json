@@ -1,6 +1,6 @@
 {
   "name": "gladys-awtrix",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Gladys Assistant integration for AWTRIX 3 pixel clocks (Ulanzi TC001), over their local HTTP API.",
   "type": "module",

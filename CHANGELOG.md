@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-15
+
 ### Added
 
 - AWTRIX 3 clocks (Ulanzi TC001, DIY builds) over their local HTTP API: one
@@ -28,4 +30,5 @@ the notes of the version's GitHub Release.
   the problem; AWTRIX NG is recognized and reported as not supported.
 - English, French, German and Spanish everywhere, documentation included.
 
-[Unreleased]: https://github.com/guim31/gladys-awtrix/commits/main
+[Unreleased]: https://github.com/guim31/gladys-awtrix/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-awtrix/releases/tag/v1.0.1

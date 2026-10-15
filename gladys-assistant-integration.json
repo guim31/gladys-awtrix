@@ -8,8 +8,8 @@
     "de": "AWTRIX-3-Pixeluhren (Ulanzi TC001): Benachrichtigungen, Gladys-Werte, Sensoren.",
     "es": "Relojes AWTRIX 3 (Ulanzi TC001): notificaciones, valores de Gladys en pantalla, sensores."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-awtrix:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-awtrix:1.0.1",
   "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-awtrix/main/cover.png",
   "categories": ["notifications"],
