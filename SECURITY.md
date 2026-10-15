@@ -30,6 +30,22 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Stored under `/data`**: `awtrix-state.json`, the clocks met so far (their
+  identifier, last address, how they were found, the sensors they reported,
+  their firmware version). No secret.
+- **Secrets**: the optional username and password of the clocks live in the
+  Gladys configuration (the password as a `secret` field). They are sent to
+  the clocks only, as HTTP Basic credentials, and never written to the logs
+  or to `/data`.
+- **Network**: plain HTTP to the clocks on the local network (AWTRIX 3 has no
+  HTTPS, so the credentials travel in clear on the LAN), and the mDNS scan
+  for `_awtrix._tcp`, run by the Gladys core on the integration's behalf.
+  Nothing goes to the Internet.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+the AWTRIX firmware (report to
+[Blueforcer/awtrix3](https://github.com/Blueforcer/awtrix3)), and the clocks
+themselves.

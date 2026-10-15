@@ -1,61 +1,188 @@
-# Demo Devices Template
+# AWTRIX 3
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+This integration connects **AWTRIX 3** pixel clocks to Gladys: the Ulanzi TC001
+"Smart Pixel Clock" and the DIY ESP32 builds running the free AWTRIX 3
+firmware. Gladys reads them and controls them over the local network, through
+their HTTP API. No cloud, no account, no MQTT broker needed.
 
-## What you get
+> **Developed without the hardware: feedback welcome.** The integration is
+> built and tested against the AWTRIX 3 API as its firmware and documentation
+> describe it, not against a real clock. Please report what works and what
+> does not in the [issues](https://github.com/guim31/gladys-awtrix/issues).
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+AWTRIX and this integration are not affiliated with Ulanzi.
+
+## Overview
+
+- **One device per clock**: display on/off, brightness, automatic brightness,
+  a "next app" button, the app on screen, and the clock's sensors
+  (temperature, humidity, ambient light, battery, Wi-Fi signal, uptime).
+- **Scene actions**: show a notification (text, color, icon, duration, sound,
+  wait for the button), keep a Gladys value on screen, light the three colored
+  indicators, change the app on screen.
+- **A dashboard widget** with the app on screen, the sensors and four buttons:
+  **Message…**, **Next app**, **Display off** / **Display on**, **Dismiss**.
+- The clocks are **found on their own** on the network (mDNS), or by their
+  addresses.
+
+## Requirements
+
+- Gladys Assistant **5.2.0** or later.
+- A clock running the **AWTRIX 3** firmware. The integration follows the API
+  of 0.98, its last release; update an older clock from its web interface. See
+  the
+  [AWTRIX 3 documentation](https://blueforcer.github.io/awtrix3/) to flash an
+  Ulanzi TC001.
+- **AWTRIX NG**, the successor firmware (2026), has a different API and is
+  **not supported**: the integration recognizes it and says so.
+- The clock and Gladys on the same local network.
 
 ## Configuration
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+1. In Gladys, open **Integrations** → **Install from GitHub** and enter
+   `https://github.com/guim31/gladys-awtrix` (or install **AWTRIX 3** from the
+   catalog).
+2. In **Configuration**:
+   - **Find the clocks on the network** (on by default): Gladys looks for the
+     clocks that announce themselves in mDNS, and follows a clock whose
+     address changes.
+   - **Clock addresses**: the IP addresses or host names of your clocks,
+     separated by commas (`192.168.1.50, 192.168.1.51`). Useful when mDNS does
+     not cross your network, or to keep a fixed address.
+   - **Username** and **Password**: only if you set "Auth Username" and "Auth
+     Password" in the web interface of the clocks. The same for all clocks.
+   - **Refresh interval**: how often the clocks are read (30 seconds by
+     default).
+   - **Language of the feature names**: the names given to the features when
+     you add a device, and the messages of the integration.
+3. Click **Test the connection**: each clock found is listed with its firmware
+   and the app on screen.
+4. In the **Discover** tab, add the clocks to Gladys.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+Each reading is two small HTTP requests per clock (`/api/stats` and
+`/api/settings`), sent one after the other: a clock is an ESP32 and serves one
+request at a time. There is no quota; keep the interval at 15 seconds or more.
 
-## Actions
+## Devices
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+Each clock is a device named "AWTRIX" followed by the end of its identifier
+(for example `AWTRIX 3c1a2b`). Its identity is the clock's own identifier, not
+its address: a new IP address keeps the device and its history.
 
-## Scenes
+| Feature              | What it does                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| Display              | Turns the matrix on or off. The clock keeps running.                                               |
+| Brightness           | 0 to 100 %. Setting it turns the automatic brightness off, or the clock would override it at once. |
+| Automatic brightness | The clock follows the ambient light.                                                               |
+| Next app             | A button: shows the next app, like the right button of the clock.                                  |
+| Current app          | The app on screen: Time, Date, Temperature, a custom app, Notification...                          |
+| Temperature          | In °C. Only when the clock reports it (Ulanzi TC001, or a DIY build with a sensor).                |
+| Humidity             | In %. Same condition.                                                                              |
+| Ambient light        | In lux, from the light sensor of the clock.                                                        |
+| Battery              | In %. Ulanzi TC001 only.                                                                           |
+| Wi-Fi signal (dBm)   | The signal received by the clock, in dBm (−50: excellent, −80: weak).                              |
+| Uptime               | Hours since the last restart of the clock.                                                         |
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+The names above are the English ones; the language chosen in the
+configuration gives "Écran", "Anzeige", "Pantalla"...
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+## Widget
 
-## Dashboard
+Add the **AWTRIX clock** widget to a dashboard. It shows the app on screen,
+the display, the brightness and the Wi-Fi signal, with the temperature and the
+humidity when the clock has them. Choose one clock in its settings, or leave
+it empty for all of them (one line each).
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+Its four buttons act on the chosen clock, or on all of them:
+
+- **Message…**: opens a form (text, color, duration) and shows the text on the
+  clock.
+- **Next app**: the next app of the rotation.
+- **Display off** / **Display on**: turns the matrix off or back on.
+- **Dismiss**: removes a notification that waits for the button.
+
+## Scene actions
+
+Every action targets one clock, or every clock when the clock field is left
+empty. Each one returns the number of clocks reached ("Clocks reached"), and
+fails when none accepted it.
+
+- **Show a notification on AWTRIX**: a text shown once over the apps. Options:
+  text color (or rainbow), an icon, the duration, what a long text does
+  (scrolls through once, scrolls for the duration, does not scroll), a sound,
+  stay until the middle button is pressed, wake the display if it is off.
+  Type `{{` in the text to insert a value of the scene.
+- **Dismiss the AWTRIX notification**: removes a notification that waits for
+  the button.
+- **Show a value on AWTRIX**: creates or updates a custom app that stays in
+  the rotation of the clock. The same name updates the same app. Options:
+  color, icon, a progress bar (0-100), and "Remove after (minutes)": the app
+  disappears if the scene stops updating it, so an old value never stays on
+  screen.
+- **Remove a value from AWTRIX**: removes that custom app.
+- **Set an AWTRIX indicator**: lights one of the three colored dots on the
+  right of the screen (1 top right, 2 right, 3 bottom right), steady, blinking
+  or fading, or turns it off.
+- **Next AWTRIX app**: the next app of the rotation.
+- **Show an AWTRIX app**: jumps to an app by its name (`Time`, `Date`,
+  `Temperature`, `Humidity`, `Battery` or a custom app).
+
+**Icons** are LaMetric icon ids that you first download on the clock: web
+interface of the clock, **Icons** tab, enter the id (for example `2422`),
+download. **Sounds** are an RTTTL melody typed in the field
+(`beep:d=16,o=6,b=120:c,e`), or the name of a melody file of the clock
+(MELODIES folder), played by the buzzer of the Ulanzi TC001.
+
+## Scene triggers
+
+None. The buttons of the clock report their presses over MQTT, or by an HTTP
+call to an address the integration cannot offer from its container. Gladys
+still sees what the buttons change: the app on screen and the display are
+device states you can use in a scene.
+
+## Scene examples
+
+- **Outdoor temperature always on screen**: trigger "a device value changes"
+  on your outdoor sensor → action **Show a value on AWTRIX**, name `outdoor`,
+  text `{{trigger value}} °C` (insert it with `{{`), icon of a thermometer,
+  **Remove after** 60 minutes.
+- **Washing machine done**: trigger on the power of the machine plug falling
+  below 5 W → **Show a notification on AWTRIX** "Laundry done", green, a
+  sound, **Stay until the button is pressed**.
+- **Night mode**: at 23:00, set the **Display** of the clock to off; at 7:00,
+  back on. Or keep it on with **Brightness** at 5 %.
+- **Door left open**: when the front door opens, **Set an AWTRIX indicator**
+  1 red, blinking; when it closes, indicator 1 off.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **No clock found**: mDNS does not always cross Wi-Fi access points or
+  VLANs. Enter the address of the clock in **Clock addresses**. The address is
+  shown on the clock at startup, and in your router.
+- **"does not answer"**: the clock is off, on another network, or its address
+  changed. With discovery on, Gladys looks for it again every 10 minutes.
+- **"username or password refused"**: the clock has "Auth Username" set; enter
+  the same username and password in the configuration.
+- **"AWTRIX NG firmware"**: the clock runs AWTRIX NG, not supported.
+- **The temperature is too high**: the sensor of the Ulanzi TC001 is heated by
+  the clock itself. AWTRIX 3 offers a temperature offset in its `dev.json`
+  file (`temp_offset`).
+- **An icon does not show**: download it on the clock first (web interface,
+  Icons tab).
+- **More details**: set `LOG_LEVEL=debug` on the integration; the logs never
+  contain the password.
+
+## Limits
+
+- **Developed without the hardware**: tested against the documented API and a
+  simulated clock only.
+- AWTRIX 3 only; AWTRIX NG is not supported.
+- No trigger for the buttons of the clock (MQTT only).
+- One username and password for all the clocks.
+- Plain HTTP only, as AWTRIX 3 serves it: keep the clocks on a trusted
+  network.
+- The brightness of a clock with automatic brightness on moves with the light:
+  Gladys shows the value read at each refresh.
+
+Report a problem or an idea in the
+[issues](https://github.com/guim31/gladys-awtrix/issues).
